@@ -1,0 +1,2588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .dropdown {
+            position: relative;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 999;
+            min-width: 140px;
+            padding: 0.4rem 0;
+            display: none;
+        }
+
+        .dropdown-menu.open { display: block; }
+
+        .dropdown-menu-item {
+            padding: 0.55rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: #374151;
+        }
+
+        .dropdown-menu-item:hover { background: #f9fafb; }
+        .dropdown-menu-item.active { color: #059669; font-weight: 600; }
+
+        .date-picker {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .date-picker input[type="date"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            cursor: pointer;
+            border: none;
+        }
+
+        .export-btn {
+            background: #ea580c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 350px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .card-menu {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0.25rem;
+            position: relative;
+        }
+
+        .card-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+            z-index: 500;
+            min-width: 160px;
+            padding: 0.4rem 0;
+            display: none;
+        }
+
+        .card-menu-dropdown.open { display: block; }
+
+        .card-menu-dropdown-item {
+            padding: 0.55rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-menu-dropdown-item:hover { background: #f9fafb; }
+        .card-menu-dropdown-item.danger { color: #ef4444; }
+
+        .amount {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .income-amount { color: #1e293b; }
+        .expense-amount { color: #1e293b; }
+
+        .change {
+            font-size: 0.875rem;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .my-card {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-chip {
+            width: 32px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .card-chip::after {
+            content: "";
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            background: #92400e;
+            border-radius: 2px;
+        }
+
+        .card-number {
+            font-size: 1.25rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            font-family: "Courier New", monospace;
+        }
+
+        .card-holder {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .card-logo {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            display: flex;
+        }
+
+        .card-logo-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .logo-red { background: #ef4444; }
+        .logo-orange { background: #f59e0b; margin-left: -8px; }
+
+        .spending-section { margin-top: 2rem; }
+
+        .spending-limit {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .spending-used {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ea580c;
+            width: 37%;
+            border-radius: 3px;
+        }
+
+        .chart-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .chart-bar {
+            width: 40px;
+            background: #e5e7eb;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: end;
+        }
+
+        .chart-bar.active {
+            background: linear-gradient(to top, #ea580c, #fb923c);
+        }
+
+        .chart-bar-income {
+            background: #10b981;
+            margin-bottom: 4px;
+            border-radius: 4px;
+        }
+
+        .chart-bar-expense {
+            background: #ea580c;
+            border-radius: 4px;
+        }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .expenses-breakdown { margin-top: 1rem; }
+
+        .total-expenses {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .period-tabs {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .period-tab { color: #6b7280; cursor: pointer; }
+        .period-tab.active { color: #1e293b; font-weight: 600; }
+
+        .period-amounts {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .period-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .color-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #ea580c, #f59e0b, #eab308, #10b981);
+            margin-bottom: 1rem;
+        }
+
+        .expense-categories { list-style: none; }
+
+        .expense-category {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .category-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-food { background: #ea580c; }
+        .dot-entertainment { background: #f59e0b; }
+        .dot-shopping { background: #eab308; }
+        .dot-investment { background: #10b981; }
+
+        .transactions-section { margin-bottom: 2rem; }
+
+        .filters { display: flex; gap: 1rem; }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .transactions-table th {
+            text-align: left;
+            padding: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .transactions-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90vw;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title { font-size: 1.25rem; font-weight: 600; }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .modal-body { padding: 1.5rem; }
+
+        .form-group { margin-bottom: 1rem; }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+
+        .add-buttons {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .fab-income { background: #10b981; }
+        .fab-expense { background: #ef4444; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, -60%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+            .chart-section { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 1rem; }
+        }
+
+        /* Auth Screen */
+        #authScreen {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+        #authScreen.active { display: flex; }
+
+        .auth-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            width: 420px;
+            max-width: 90vw;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .auth-logo p {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            background: white;
+            color: #059669;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+
+        .auth-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .auth-input:focus { border-color: #059669; }
+
+        .auth-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .auth-btn:hover { background: #047857; }
+        .auth-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+        .auth-error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        /* Dashboard hidden by default */
+        #dashboardScreen { display: none; }
+
+        .logout-btn {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn:hover { background: #e5e7eb; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 6px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Filter & Sort */
+        .filter-controls { position: relative; display: flex; gap: 1rem; }
+
+        .filter-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 999;
+            min-width: 200px;
+            padding: 0.5rem 0;
+            display: none;
+        }
+
+        .filter-dropdown.open { display: block; }
+
+        .filter-dropdown-title {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+        }
+
+        .filter-option {
+            padding: 0.6rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #374151;
+        }
+
+        .filter-option:hover { background: #f9fafb; }
+        .filter-option.active { color: #059669; font-weight: 600; }
+        .filter-option.active::after { content: "✓"; margin-left: auto; }
+
+        .filter-divider { height: 1px; background: #f3f4f6; margin: 0.25rem 0; }
+
+        .active-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .filter-tag {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            border-radius: 20px;
+            padding: 0.2rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+        }
+
+        .filter-tag:hover { background: #d1fae5; }
+
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+
+        .filter-btn.active-filter {
+            background: #ecfdf5;
+            border-color: #059669;
+            color: #059669;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== AUTH SCREEN ===== -->
+    <div id="authScreen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h2>💰 Finance Dashboard</h2>
+                <p>Manage your personal finances</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+                <button class="auth-tab" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <div id="authError" class="auth-error"></div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="auth-form active">
+                <input type="email" class="auth-input" id="loginEmail" placeholder="Email address" />
+                <input type="password" class="auth-input" id="loginPassword" placeholder="Password" />
+                <button class="auth-btn" id="loginBtn" onclick="handleLogin()">Login</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form">
+                <input type="text" class="auth-input" id="regUsername" placeholder="Username" />
+                <input type="text" class="auth-input" id="regFullName" placeholder="Full Name" />
+                <input type="email" class="auth-input" id="regEmail" placeholder="Email address" />
+                <input type="password" class="auth-input" id="regPassword" placeholder="Password (min 6 chars)" />
+                <button class="auth-btn" id="registerBtn" onclick="handleRegister()">Create Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DASHBOARD SCREEN ===== -->
+    <div id="dashboardScreen">
+    <div class="header">
+        <h1 id="welcomeMsg">Good Morning!</h1>
+        <div class="header-controls">
+            <div class="dropdown" id="periodDropdown" onclick="togglePeriodDropdown(event)">
+                <span id="periodLabel">Daily</span> <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-menu" id="periodMenu">
+                    <div class="dropdown-menu-item active" onclick="selectPeriod('Daily', event)">Daily</div>
+                    <div class="dropdown-menu-item" onclick="selectPeriod('Weekly', event)">Weekly</div>
+                    <div class="dropdown-menu-item" onclick="selectPeriod('Monthly', event)">Monthly</div>
+                    <div class="dropdown-menu-item" onclick="selectPeriod('Yearly', event)">Yearly</div>
+                </div>
+            </div>
+            <div class="date-picker" onclick="document.getElementById('headerDateInput').showPicker ? document.getElementById('headerDateInput').showPicker() : document.getElementById('headerDateInput').click()">
+                <i class="fas fa-calendar"></i>
+                <span id="currentDate">16 January 2025</span>
+                <input type="date" id="headerDateInput" onchange="updateHeaderDate(this.value)" />
+            </div>
+            <button class="export-btn" onclick="exportDashboard()">
+                <i class="fas fa-download"></i>
+                Export
+            </button>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title income-title">Monthly Income</h3>
+                    <button class="card-menu" onclick="toggleCardMenu('menu-income', event)">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <div class="card-menu-dropdown" id="menu-income">
+                            <div class="card-menu-dropdown-item" onclick="openDetailsModal('income')"><i class="fas fa-eye"></i> View Details</div>
+                            <div class="card-menu-dropdown-item" onclick="openIncomeModal()"><i class="fas fa-plus"></i> Add Income</div>
+                            <div class="card-menu-dropdown-item" onclick="exportDashboard()"><i class="fas fa-download"></i> Export</div>
+                        </div>
+                    </button>
+                </div>
+                <div class="amount income-amount">$2,645.00</div>
+                <div class="change">
+                    <i class="fas fa-arrow-up"></i>
+                    12% vs Last month
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title expense-title">Monthly Expenses</h3>
+                    <button class="card-menu" onclick="toggleCardMenu('menu-expense', event)">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <div class="card-menu-dropdown" id="menu-expense">
+                            <div class="card-menu-dropdown-item" onclick="openDetailsModal('expense')"><i class="fas fa-eye"></i> View Details</div>
+                            <div class="card-menu-dropdown-item" onclick="openExpenseModal()"><i class="fas fa-plus"></i> Add Expense</div>
+                            <div class="card-menu-dropdown-item" onclick="exportDashboard()"><i class="fas fa-download"></i> Export</div>
+                        </div>
+                    </button>
+                </div>
+                <div class="amount expense-amount">$1,895.00</div>
+                <div class="change">
+                    <i class="fas fa-arrow-up"></i>
+                    12% vs Last month
+                </div>
+            </div>
+
+            <div class="card my-card">
+                <div class="card-header">
+                    <h3 class="card-title">My Card</h3>
+                    <button class="card-menu" style="color: rgba(255,255,255,0.8)" onclick="toggleCardMenu('menu-mycard', event)">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <div class="card-menu-dropdown" id="menu-mycard" style="color:#374151;">
+                            <div class="card-menu-dropdown-item" onclick="openCardDetailsModal()"><i class="fas fa-credit-card"></i> Card Details</div>
+                            <div class="card-menu-dropdown-item" onclick="openLimitModal()"><i class="fas fa-sliders-h"></i> Manage Limit</div>
+                            <div class="card-menu-dropdown-item" onclick="exportDashboard()"><i class="fas fa-download"></i> Export</div>
+                        </div>
+                    </button>
+                </div>
+                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 1rem;">Linked to your primary wallet</div>
+
+                <div class="card-chip"></div>
+                <div class="card-number">5435 2735 0037 0015</div>
+                <div class="card-holder">Nick Kenter</div>
+
+                <div class="card-logo">
+                    <div class="card-logo-circle logo-red"></div>
+                    <div class="card-logo-circle logo-orange"></div>
+                </div>
+
+                <div class="spending-section">
+                    <div style="margin-bottom: 0.5rem; font-size: 0.875rem; opacity: 0.9;">Spending Limit</div>
+                    <div class="spending-limit">$4,645.00</div>
+                    <div class="spending-used">used from $12,645.00</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Overview</h3>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="dropdown" id="overviewYearDropdown" onclick="toggleOverviewYearDropdown(event)">
+                            <span id="overviewYearLabel">Yearly</span> <i class="fas fa-chevron-down"></i>
+                            <div class="dropdown-menu" id="overviewYearMenu">
+                                <div class="dropdown-menu-item" onclick="selectOverviewYear('Monthly', event)">Monthly</div>
+                                <div class="dropdown-menu-item" onclick="selectOverviewYear('Quarterly', event)">Quarterly</div>
+                                <div class="dropdown-menu-item active" onclick="selectOverviewYear('Yearly', event)">Yearly</div>
+                            </div>
+                        </div>
+                        <button class="filter-btn" id="overviewFilterBtn" onclick="toggleOverviewFilter(event)">
+                            <i class="fas fa-filter"></i>
+                            Filter
+                        </button>
+                        <div class="filter-dropdown" id="overviewFilterMenu" style="right:0; left:auto;">
+                            <div class="filter-dropdown-title">Show Data</div>
+                            <div class="filter-option active" id="ovf-both" onclick="applyOverviewFilter('both')"><i class="fas fa-chart-bar"></i> Income &amp; Expenses</div>
+                            <div class="filter-option" id="ovf-income" onclick="applyOverviewFilter('income')"><i class="fas fa-arrow-up" style="color:#10b981"></i> Income Only</div>
+                            <div class="filter-option" id="ovf-expense" onclick="applyOverviewFilter('expense')"><i class="fas fa-arrow-down" style="color:#ea580c"></i> Expenses Only</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-bar" style="height: 120px;"></div>
+                    <div class="chart-bar" style="height: 80px;"></div>
+                    <div class="chart-bar active" style="height: 200px;">
+                        <div class="chart-tooltip" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: white; padding: 0.25rem 0.5rem; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-size: 0.75rem; white-space: nowrap;">
+                            <div class="tooltip-label" style="font-weight: 600;">April 2025</div>
+                            <div class="tooltip-income" style="color: #10b981;">Income: $2,645</div>
+                            <div class="tooltip-expense" style="color: #ea580c;">Expenses: $1,895</div>
+                        </div>
+                        <div class="chart-bar-income" style="height: 120px;"></div>
+                        <div class="chart-bar-expense" style="height: 80px;"></div>
+                    </div>
+                    <div class="chart-bar" style="height: 150px;"></div>
+                    <div class="chart-bar" style="height: 90px;"></div>
+                    <div class="chart-bar" style="height: 110px;"></div>
+                    <div class="chart-bar" style="height: 130px;"></div>
+                    <div class="chart-bar" style="height: 100px;"></div>
+                    <div class="chart-bar" style="height: 85px;"></div>
+                    <div class="chart-bar" style="height: 160px;"></div>
+                    <div class="chart-bar" style="height: 95px;"></div>
+                </div>
+                <div class="chart-labels">
+                    <span>Feb</span><span>Mar</span><span>Apr</span><span>Mei</span>
+                    <span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span>
+                    <span>Oct</span><span>Nov</span><span>Des</span>
+                </div>
+            </div>
+
+            <div class="card" id="allExpensesCard">
+                <div class="card-header">
+                    <h3 class="card-title">All Expenses</h3>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <!-- Period dropdown -->
+                        <div class="dropdown" id="expPeriodDropdown" onclick="toggleExpPeriodDropdown(event)" style="font-size:0.8rem;padding:0.35rem 0.75rem;">
+                            <span id="expPeriodLabel">Monthly</span> <i class="fas fa-chevron-down" style="font-size:0.7rem;"></i>
+                            <div class="dropdown-menu" id="expPeriodMenu" style="min-width:120px;">
+                                <div class="dropdown-menu-item active" id="expPd-Daily"   onclick="selectExpPeriod('Daily',event)">Daily</div>
+                                <div class="dropdown-menu-item"        id="expPd-Weekly"  onclick="selectExpPeriod('Weekly',event)">Weekly</div>
+                                <div class="dropdown-menu-item active" id="expPd-Monthly" onclick="selectExpPeriod('Monthly',event)">Monthly</div>
+                                <div class="dropdown-menu-item"        id="expPd-Yearly"  onclick="selectExpPeriod('Yearly',event)">Yearly</div>
+                            </div>
+                        </div>
+                        <!-- Category filter dropdown -->
+                        <div class="dropdown" id="expCatDropdown" onclick="toggleExpCatDropdown(event)" style="font-size:0.8rem;padding:0.35rem 0.75rem;">
+                            <i class="fas fa-filter" style="font-size:0.75rem;margin-right:0.3rem;"></i><span id="expCatLabel">Filter</span>
+                            <div class="dropdown-menu" id="expCatMenu" style="min-width:160px;right:0;left:auto;">
+                                <div class="dropdown-menu-item active" id="expCat-all"           onclick="selectExpCat('all',event)">All Categories</div>
+                                <div class="dropdown-menu-item"        id="expCat-food"          onclick="selectExpCat('food',event)"><span style="color:#ea580c;">●</span> Food &amp; Health</div>
+                                <div class="dropdown-menu-item"        id="expCat-entertainment" onclick="selectExpCat('entertainment',event)"><span style="color:#f59e0b;">●</span> Entertainment</div>
+                                <div class="dropdown-menu-item"        id="expCat-shopping"      onclick="selectExpCat('shopping',event)"><span style="color:#eab308;">●</span> Shopping</div>
+                                <div class="dropdown-menu-item"        id="expCat-investment"    onclick="selectExpCat('investment',event)"><span style="color:#10b981;">●</span> Investment</div>
+                            </div>
+                        </div>
+                        <!-- ... menu -->
+                        <button class="card-menu" onclick="toggleCardMenu('menu-allexpenses', event)">
+                            <i class="fas fa-ellipsis-h"></i>
+                            <div class="card-menu-dropdown" id="menu-allexpenses">
+                                <div class="card-menu-dropdown-item" onclick="openExpAllDetails()"><i class="fas fa-eye"></i> View All</div>
+                                <div class="card-menu-dropdown-item" onclick="exportExpenseCSV()"><i class="fas fa-download"></i> Export CSV</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 1rem;" id="expSubtitle">Spending breakdown by category</div>
+
+                <div class="expenses-breakdown">
+                    <div class="total-expenses" id="expTotalDisplay">$1,895.00</div>
+
+                    <div class="period-tabs" style="margin-bottom:1.2rem;">
+                        <span class="period-tab" onclick="selectExpensePeriod('Daily', this)">Daily</span>
+                        <span class="period-tab" onclick="selectExpensePeriod('Weekly', this)">Weekly</span>
+                        <span class="period-tab active" onclick="selectExpensePeriod('Monthly', this)">Monthly</span>
+                    </div>
+
+                    <!-- Visual category bars -->
+                    <div id="expCategoryBars" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1rem;"></div>
+
+                    <div class="color-bar"></div>
+
+                    <ul class="expense-categories" id="expCategoryList"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card transactions-section">
+            <div class="card-header">
+                <h3 class="card-title">Recent Transactions</h3>
+                <div class="filter-controls">
+                    <!-- Sort Button -->
+                    <button class="filter-btn" id="sortBtn" onclick="toggleSortDropdown()">
+                        <i class="fas fa-sort"></i>
+                        Sort
+                    </button>
+                    <div class="filter-dropdown" id="sortDropdown">
+                        <div class="filter-dropdown-title">Sort By</div>
+                        <div class="filter-option active" id="sort-date-desc" onclick="applySort('date-desc')">
+                            <i class="fas fa-calendar"></i> Date (Newest First)
+                        </div>
+                        <div class="filter-option" id="sort-date-asc" onclick="applySort('date-asc')">
+                            <i class="fas fa-calendar"></i> Date (Oldest First)
+                        </div>
+                        <div class="filter-divider"></div>
+                        <div class="filter-option" id="sort-amount-desc" onclick="applySort('amount-desc')">
+                            <i class="fas fa-dollar-sign"></i> Amount (High to Low)
+                        </div>
+                        <div class="filter-option" id="sort-amount-asc" onclick="applySort('amount-asc')">
+                            <i class="fas fa-dollar-sign"></i> Amount (Low to High)
+                        </div>
+                        <div class="filter-divider"></div>
+                        <div class="filter-option" id="sort-category" onclick="applySort('category')">
+                            <i class="fas fa-tag"></i> Category (A-Z)
+                        </div>
+                    </div>
+
+                    <!-- Filter Button -->
+                    <button class="filter-btn" id="filterBtn" onclick="toggleFilterDropdown()">
+                        <i class="fas fa-filter"></i>
+                        Filter
+                    </button>
+                    <div class="filter-dropdown" id="filterDropdown">
+                        <div class="filter-dropdown-title">Type</div>
+                        <div class="filter-option" id="filter-all" onclick="applyFilter('all')">
+                            <i class="fas fa-list"></i> All Transactions
+                        </div>
+                        <div class="filter-option" id="filter-income" onclick="applyFilter('income')">
+                            <i class="fas fa-arrow-up" style="color:#10b981"></i> Income Only
+                        </div>
+                        <div class="filter-option" id="filter-expense" onclick="applyFilter('expense')">
+                            <i class="fas fa-arrow-down" style="color:#ef4444"></i> Expenses Only
+                        </div>
+                        <div class="filter-divider"></div>
+                        <div class="filter-dropdown-title">Category</div>
+                        <div class="filter-option" id="filter-cat-all" onclick="applyFilterCategory('all')">All Categories</div>
+                        <div class="filter-option" id="filter-cat-food" onclick="applyFilterCategory('food')">Food &amp; Health</div>
+                        <div class="filter-option" id="filter-cat-entertainment" onclick="applyFilterCategory('entertainment')">Entertainment</div>
+                        <div class="filter-option" id="filter-cat-shopping" onclick="applyFilterCategory('shopping')">Shopping</div>
+                        <div class="filter-option" id="filter-cat-investment" onclick="applyFilterCategory('investment')">Investment</div>
+                        <div class="filter-option" id="filter-cat-salary" onclick="applyFilterCategory('salary')">Salary</div>
+                        <div class="filter-option" id="filter-cat-transport" onclick="applyFilterCategory('transport')">Transport</div>
+                        <div class="filter-divider"></div>
+                        <div class="filter-option" onclick="clearAllFilters()" style="color:#ef4444">
+                            <i class="fas fa-times"></i> Clear All Filters
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active filter tags -->
+            <div class="active-filters" id="activeFilters"></div>
+
+            <table class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Date <i class="fas fa-sort"></i></th>
+                        <th>Category <i class="fas fa-sort"></i></th>
+                        <th>Amount <i class="fas fa-sort"></i></th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Jan 14, 2025</td>
+                        <td>Subscription</td>
+                        <td>$440.00</td>
+                        <td><span class="status-success">Success</span></td>
+                        <td><button class="action-btn"><i class="fas fa-ellipsis-h"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>Jan 10, 2025</td>
+                        <td>Transfer</td>
+                        <td>$440.00</td>
+                        <td><span class="status-success">Success</span></td>
+                        <td><button class="action-btn"><i class="fas fa-ellipsis-h"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td>Jan 8, 2025</td>
+                        <td>Transfer</td>
+                        <td>$440.00</td>
+                        <td><span class="status-success">Success</span></td>
+                        <td><button class="action-btn"><i class="fas fa-ellipsis-h"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FAB Buttons -->
+    <div class="add-buttons">
+        <button class="fab fab-income" onclick="openIncomeModal()" title="Add Income">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button class="fab fab-expense" onclick="openExpenseModal()" title="Add Expense">
+            <i class="fas fa-minus"></i>
+        </button>
+    </div>
+
+    <!-- Income Modal -->
+    <div id="incomeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Income</h2>
+                <button class="close-btn" onclick="closeModal('incomeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Amount</label>
+                    <input type="number" class="form-input" id="incomeAmount" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="incomeCategory">
+                        <option value="">Select category</option>
+                        <option value="salary">Salary</option>
+                        <option value="freelance">Freelance</option>
+                        <option value="business">Business</option>
+                        <option value="investment">Investment</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-input" id="incomeDescription" placeholder="Enter description">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-input" id="incomeDate">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('incomeModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addIncome()">Add Income</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Expense</h2>
+                <button class="close-btn" onclick="closeModal('expenseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Amount</label>
+                    <input type="number" class="form-input" id="expenseAmount" placeholder="Enter amount">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="expenseCategory">
+                        <option value="">Select category</option>
+                        <option value="food">Food &amp; Health</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="investment">Investment</option>
+                        <option value="transport">Transport</option>
+                        <option value="utilities">Utilities</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-input" id="expenseDescription" placeholder="Enter description">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-input" id="expenseDate">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('expenseModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addExpense()">Add Expense</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Limit Management Modal -->
+    <div id="limitModal" class="modal" onclick="if(event.target===this)closeModal('limitModal')">
+        <div class="modal-content" style="width:520px;">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-sliders-h" style="color:#059669;margin-right:0.5rem;"></i>Manage Card Limit</h2>
+                <button class="close-btn" onclick="closeModal('limitModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Current Usage Summary -->
+                <div style="background:linear-gradient(135deg,#059669,#10b981);border-radius:10px;padding:1.2rem;color:white;margin-bottom:1.5rem;">
+                    <div style="font-size:0.8rem;opacity:0.85;margin-bottom:0.3rem;">Current Spending Limit</div>
+                    <div style="font-size:1.8rem;font-weight:700;" id="limitSummaryTotal">$12,645.00</div>
+                    <div style="margin-top:0.8rem;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;opacity:0.9;margin-bottom:0.4rem;">
+                            <span>Used: <span id="limitSummaryUsed">$4,645.00</span></span>
+                            <span>Remaining: <span id="limitSummaryRemaining">$8,000.00</span></span>
+                        </div>
+                        <div style="height:6px;background:rgba(255,255,255,0.3);border-radius:3px;overflow:hidden;">
+                            <div id="limitSummaryBar" style="height:100%;background:white;border-radius:3px;width:37%;transition:width 0.4s;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Set New Limit -->
+                <div class="form-group">
+                    <label class="form-label">Set New Spending Limit</label>
+                    <div style="position:relative;">
+                        <span style="position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:#6b7280;font-size:1rem;">$</span>
+                        <input type="number" class="form-input" id="newLimitInput" placeholder="e.g. 15000" min="0" step="100"
+                            style="padding-left:1.8rem;"
+                            oninput="updateLimitPreview(this.value)" />
+                    </div>
+                    <div style="font-size:0.78rem;color:#6b7280;margin-top:0.3rem;">Current limit: $12,645.00 &nbsp;|&nbsp; Min allowed: $4,645.00 (current spend)</div>
+                </div>
+
+                <!-- Quick presets -->
+                <div class="form-group">
+                    <label class="form-label">Quick Presets</label>
+                    <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+                        <button class="limit-preset" onclick="setLimitPreset(5000)">$5,000</button>
+                        <button class="limit-preset" onclick="setLimitPreset(10000)">$10,000</button>
+                        <button class="limit-preset" onclick="setLimitPreset(15000)">$15,000</button>
+                        <button class="limit-preset" onclick="setLimitPreset(20000)">$20,000</button>
+                        <button class="limit-preset" onclick="setLimitPreset(25000)">$25,000</button>
+                    </div>
+                </div>
+
+                <!-- Notification threshold -->
+                <div class="form-group">
+                    <label class="form-label">Alert me when I reach</label>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <input type="range" id="alertThreshold" min="50" max="100" value="80" step="5"
+                            style="flex:1;accent-color:#059669;"
+                            oninput="document.getElementById('alertPct').textContent=this.value+'%'" />
+                        <span id="alertPct" style="font-weight:700;color:#059669;min-width:40px;">80%</span>
+                    </div>
+                    <div style="font-size:0.78rem;color:#6b7280;margin-top:0.2rem;">You'll get a warning when spending hits this % of your limit.</div>
+                </div>
+
+                <!-- Live Preview -->
+                <div id="limitPreviewBox" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:1rem;margin-top:0.5rem;">
+                    <div style="font-size:0.8rem;color:#065f46;font-weight:600;margin-bottom:0.4rem;">Preview</div>
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:#374151;margin-bottom:0.5rem;">
+                        <span>New Limit: <strong id="previewLimit">—</strong></span>
+                        <span>Remaining: <strong id="previewRemaining">—</strong></span>
+                    </div>
+                    <div style="height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+                        <div id="previewBar" style="height:100%;background:#059669;border-radius:3px;width:0%;transition:width 0.3s;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('limitModal')">Cancel</button>
+                <button class="btn btn-primary" style="background:#059669;" onclick="applyNewLimit()">Save Limit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Details Modal -->
+    <div id="cardDetailsModal" class="modal" onclick="if(event.target===this)closeModal('cardDetailsModal')">
+        <div class="modal-content" style="width:480px;">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-credit-card" style="color:#059669;margin-right:0.5rem;"></i>Card Details</h2>
+                <button class="close-btn" onclick="closeModal('cardDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Mini Card Preview -->
+                <div style="background:linear-gradient(135deg,#059669,#10b981);border-radius:14px;padding:1.5rem;color:white;margin-bottom:1.5rem;position:relative;overflow:hidden;">
+                    <div style="font-size:0.75rem;opacity:0.8;margin-bottom:1rem;">Linked to your primary wallet</div>
+                    <div style="width:32px;height:24px;background:#fbbf24;border-radius:4px;margin-bottom:1rem;position:relative;">
+                        <div style="position:absolute;top:4px;left:4px;right:4px;bottom:4px;background:#92400e;border-radius:2px;"></div>
+                    </div>
+                    <div style="font-size:1.15rem;letter-spacing:0.15em;font-family:'Courier New',monospace;margin-bottom:1rem;">5435  2735  0037  0015</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                        <div>
+                            <div style="font-size:0.7rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;">Card Holder</div>
+                            <div style="font-weight:600;">Nick Kenter</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.7rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;">Expires</div>
+                            <div style="font-weight:600;">08/28</div>
+                        </div>
+                        <div style="display:flex;">
+                            <div style="width:24px;height:24px;border-radius:50%;background:#ef4444;"></div>
+                            <div style="width:24px;height:24px;border-radius:50%;background:#f59e0b;margin-left:-8px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Details rows -->
+                <div style="display:grid;gap:0.8rem;">
+                    <div style="display:flex;justify-content:space-between;padding:0.7rem;background:#f8fafc;border-radius:8px;">
+                        <span style="color:#6b7280;font-size:0.875rem;">Card Type</span>
+                        <span style="font-weight:600;font-size:0.875rem;">Mastercard Debit</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:0.7rem;background:#f8fafc;border-radius:8px;">
+                        <span style="color:#6b7280;font-size:0.875rem;">Card Number</span>
+                        <span style="font-weight:600;font-size:0.875rem;">•••• •••• •••• 0015</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:0.7rem;background:#f8fafc;border-radius:8px;">
+                        <span style="color:#6b7280;font-size:0.875rem;">CVV</span>
+                        <span style="font-weight:600;font-size:0.875rem;" id="cvvDisplay">•••
+                            <button onclick="toggleCVV()" style="background:none;border:none;cursor:pointer;color:#059669;font-size:0.75rem;margin-left:4px;" id="cvvToggle"><i class="fas fa-eye"></i></button>
+                        </span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:0.7rem;background:#f8fafc;border-radius:8px;">
+                        <span style="color:#6b7280;font-size:0.875rem;">Expiry Date</span>
+                        <span style="font-weight:600;font-size:0.875rem;">08 / 2028</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:0.7rem;background:#f8fafc;border-radius:8px;">
+                        <span style="color:#6b7280;font-size:0.875rem;">Wallet</span>
+                        <span style="font-weight:600;font-size:0.875rem;">Primary Wallet</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding:0.7rem;background:#f8fafc;border-radius:8px;">
+                        <span style="color:#6b7280;font-size:0.875rem;">Status</span>
+                        <span style="font-weight:600;font-size:0.875rem;color:#10b981;"><i class="fas fa-circle" style="font-size:0.5rem;margin-right:4px;"></i>Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="gap:0.75rem;">
+                <button class="btn btn-secondary" onclick="closeModal('cardDetailsModal')">Close</button>
+                <button class="btn" style="background:#f59e0b;color:white;" onclick="closeModal('cardDetailsModal');showNotification('Card frozen temporarily','success')"><i class="fas fa-snowflake"></i> Freeze Card</button>
+                <button class="btn btn-primary" style="background:#059669;" onclick="closeModal('cardDetailsModal');openLimitModal()"><i class="fas fa-sliders-h"></i> Manage Limit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income / Expense Details Modal -->
+    <div id="detailsModal" class="modal" onclick="if(event.target===this)closeModal('detailsModal')">
+        <div class="modal-content" style="width:500px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="detailsModalTitle">Income Details</h2>
+                <button class="close-btn" onclick="closeModal('detailsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsModalContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('detailsModal')">Close</button>
+                <button class="btn btn-primary" id="detailsAddBtn" onclick="">Add Entry</button>
+            </div>
+        </div>
+    </div>
+
+    </div> <!-- end dashboardScreen -->
+
+    <style>
+        .limit-preset {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 0.4rem 0.85rem;
+            font-size: 0.82rem;
+            cursor: pointer;
+            color: #374151;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .limit-preset:hover { background: #ecfdf5; border-color: #059669; color: #059669; }
+        .limit-preset.selected { background: #059669; color: white; border-color: #059669; }
+    </style>
+
+    <script>
+        const BASE_URL = "http://localhost:8080";
+
+        // ── Auth helpers ──────────────────────────────────────────
+        function getToken() { return localStorage.getItem("fin_token"); }
+        function getUser()  { return JSON.parse(localStorage.getItem("fin_user") || "{}"); }
+
+        function saveSession(data) {
+            localStorage.setItem("fin_token", data.token);
+            localStorage.setItem("fin_user", JSON.stringify({
+                username: data.username,
+                email: data.email,
+                fullName: data.fullName
+            }));
+        }
+
+        function clearSession() {
+            localStorage.removeItem("fin_token");
+            localStorage.removeItem("fin_user");
+        }
+
+        async function apiFetch(path, method = "GET", body = null) {
+            const headers = { "Content-Type": "application/json" };
+            const token = getToken();
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+            const opts = { method, headers };
+            if (body) opts.body = JSON.stringify(body);
+            const res = await fetch(BASE_URL + path, opts);
+            return res;
+        }
+
+        // ── Auth tab switch ───────────────────────────────────────
+        function switchTab(tab) {
+            document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".auth-form").forEach(f => f.classList.remove("active"));
+            document.querySelector(`.auth-tab:${tab === "login" ? "first-child" : "last-child"}`).classList.add("active");
+            document.getElementById(tab === "login" ? "loginForm" : "registerForm").classList.add("active");
+            hideAuthError();
+        }
+
+        function showAuthError(msg) {
+            const el = document.getElementById("authError");
+            el.textContent = msg;
+            el.style.display = "block";
+        }
+
+        function hideAuthError() {
+            document.getElementById("authError").style.display = "none";
+        }
+
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="loading-spinner"></span>Please wait...`;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = btnId === "loginBtn" ? "Login" : "Create Account";
+            }
+        }
+
+        // ── Login ─────────────────────────────────────────────────
+        async function handleLogin() {
+            const email    = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            if (!email || !password) { showAuthError("Please enter email and password."); return; }
+
+            setLoading("loginBtn", true);
+            hideAuthError();
+            try {
+                const res  = await apiFetch("/api/auth/login", "POST", { email, password });
+                const data = await res.json();
+                if (res.ok) {
+                    saveSession(data);
+                    showDashboard();
+                } else {
+                    showAuthError(data.message || "Invalid email or password.");
+                }
+            } catch (e) {
+                showAuthError("Cannot connect to server. Make sure backend is running on port 8080.");
+            } finally {
+                setLoading("loginBtn", false);
+            }
+        }
+
+        // ── Register ──────────────────────────────────────────────
+        async function handleRegister() {
+            const username = document.getElementById("regUsername").value.trim();
+            const fullName = document.getElementById("regFullName").value.trim();
+            const email    = document.getElementById("regEmail").value.trim();
+            const password = document.getElementById("regPassword").value;
+
+            if (!username || !fullName || !email || !password) { showAuthError("Please fill in all fields."); return; }
+            if (password.length < 6) { showAuthError("Password must be at least 6 characters."); return; }
+
+            setLoading("registerBtn", true);
+            hideAuthError();
+            try {
+                const res  = await apiFetch("/api/auth/register", "POST", { username, fullName, email, password });
+                const data = await res.json();
+                if (res.ok) {
+                    saveSession(data);
+                    showDashboard();
+                } else {
+                    showAuthError(data.message || "Registration failed.");
+                }
+            } catch (e) {
+                showAuthError("Cannot connect to server. Make sure backend is running on port 8080.");
+            } finally {
+                setLoading("registerBtn", false);
+            }
+        }
+
+        // ── Logout ────────────────────────────────────────────────
+        function handleLogout() {
+            clearSession();
+            document.getElementById("dashboardScreen").style.display = "none";
+            document.getElementById("authScreen").classList.add("active");
+            // Clear login fields
+            document.getElementById("loginEmail").value = "";
+            document.getElementById("loginPassword").value = "";
+            hideAuthError();
+        }
+
+        // ── Show dashboard ────────────────────────────────────────
+        function showDashboard() {
+            document.getElementById("authScreen").classList.remove("active");
+            document.getElementById("dashboardScreen").style.display = "block";
+
+            const user = getUser();
+            const hour = new Date().getHours();
+            const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+            document.getElementById("welcomeMsg").textContent = `${greeting}, ${user.fullName || user.username}!`;
+
+            const now = new Date();
+            document.getElementById("currentDate").textContent = now.toLocaleDateString("en-US", {
+                day: "numeric", month: "long", year: "numeric"
+            });
+
+            loadTransactions();
+        }
+
+        // ── Load transactions from backend ────────────────────────
+        async function loadTransactions() {
+            try {
+                const res = await apiFetch("/api/transactions");
+                if (res.ok) {
+                    const data = await res.json();
+                    transactions = data.map(t => ({
+                        id: t.id,
+                        date: t.date,
+                        category: t.category,
+                        amount: t.type === "EXPENSE" ? -Math.abs(t.amount) : Math.abs(t.amount),
+                        status: "Success",
+                        type: t.type?.toLowerCase(),
+                        description: t.description
+                    }));
+                    recalcTotals();
+                    updateDashboard();
+                    updateTransactionsTable();
+                } else if (res.status === 401) {
+                    handleLogout();
+                }
+            } catch (e) {
+                // Backend may not have transactions endpoint yet — use local data
+                updateTransactionsTable();
+            }
+        }
+
+        // ── Save transaction to backend ───────────────────────────
+        async function saveTransaction(payload) {
+            try {
+                const res = await apiFetch("/api/transactions", "POST", payload);
+                if (res.status === 401) { handleLogout(); return false; }
+                return res.ok;
+            } catch (e) {
+                return false; // fall back to local only
+            }
+        }
+
+        // ── Initialize data ───────────────────────────────────────
+        let transactions = [
+            { id: 1, date: "2025-01-14", category: "Subscription", amount: -440, status: "Success", type: "expense" },
+            { id: 2, date: "2025-01-10", category: "Transfer",     amount: -440, status: "Success", type: "expense" },
+            { id: 3, date: "2025-01-08", category: "Transfer",     amount: -440, status: "Success", type: "expense" },
+        ];
+
+        let monthlyIncome   = 2645;
+        let monthlyExpenses = 1895;
+
+        function recalcTotals() {
+            monthlyIncome   = transactions.filter(t => t.amount > 0).reduce((s, t) =>  s + t.amount,  0);
+            monthlyExpenses = transactions.filter(t => t.amount < 0).reduce((s, t) => s - t.amount, 0);
+        }
+
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("incomeDate").value  = today;
+        document.getElementById("expenseDate").value = today;
+
+        function openIncomeModal() {
+            document.getElementById("incomeModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+
+        function openExpenseModal() {
+            document.getElementById("expenseModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+            document.body.style.overflow = "auto";
+            if (modalId === "incomeModal") {
+                document.getElementById("incomeAmount").value = "";
+                document.getElementById("incomeCategory").value = "";
+                document.getElementById("incomeDescription").value = "";
+                document.getElementById("incomeDate").value = today;
+            } else {
+                document.getElementById("expenseAmount").value = "";
+                document.getElementById("expenseCategory").value = "";
+                document.getElementById("expenseDescription").value = "";
+                document.getElementById("expenseDate").value = today;
+            }
+        }
+
+        window.onclick = function(event) {
+            const incomeModal  = document.getElementById("incomeModal");
+            const expenseModal = document.getElementById("expenseModal");
+            if (event.target === incomeModal)  closeModal("incomeModal");
+            if (event.target === expenseModal) closeModal("expenseModal");
+        };
+
+        async function addIncome() {
+            const amount      = parseFloat(document.getElementById("incomeAmount").value);
+            const category    = document.getElementById("incomeCategory").value;
+            const description = document.getElementById("incomeDescription").value;
+            const date        = document.getElementById("incomeDate").value;
+
+            if (!amount || !category || !date) { alert("Please fill in all required fields"); return; }
+
+            const entry = { id: transactions.length + 1, date, category: category.charAt(0).toUpperCase() + category.slice(1), amount, status: "Success", type: "income", description };
+            transactions.unshift(entry);
+            monthlyIncome += amount;
+
+            // Try to save to backend
+            await saveTransaction({ amount, category, description, date, type: "INCOME" });
+
+            updateDashboard();
+            updateTransactionsTable();
+            closeModal("incomeModal");
+            showNotification("Income added successfully!", "success");
+        }
+
+        async function addExpense() {
+            const amount      = parseFloat(document.getElementById("expenseAmount").value);
+            const category    = document.getElementById("expenseCategory").value;
+            const description = document.getElementById("expenseDescription").value;
+            const date        = document.getElementById("expenseDate").value;
+
+            if (!amount || !category || !date) { alert("Please fill in all required fields"); return; }
+
+            const entry = { id: transactions.length + 1, date, category: category.charAt(0).toUpperCase() + category.slice(1), amount: -amount, status: "Success", type: "expense", description };
+            transactions.unshift(entry);
+            monthlyExpenses += amount;
+
+            // Try to save to backend
+            await saveTransaction({ amount, category, description, date, type: "EXPENSE" });
+
+            updateDashboard();
+            updateTransactionsTable();
+            closeModal("expenseModal");
+            showNotification("Expense added successfully!", "success");
+        }
+
+        function updateDashboard() {
+            document.querySelector(".income-amount").textContent  = `$${monthlyIncome.toLocaleString()}.00`;
+            document.querySelector(".expense-amount").textContent = `$${monthlyExpenses.toLocaleString()}.00`;
+            const spendingLimit = 12645;
+            const percentage    = (monthlyExpenses / spendingLimit) * 100;
+            document.querySelector(".spending-limit").textContent = `$${(spendingLimit - monthlyExpenses).toLocaleString()}.00`;
+            document.querySelector(".progress-fill").style.width  = `${Math.min(percentage, 100)}%`;
+        }
+
+        function updateTransactionsTable() {
+            const tbody = document.querySelector(".transactions-table tbody");
+            tbody.innerHTML = "";
+
+            // Filter
+            let filtered = transactions.filter(t => {
+                if (currentFilter === "income"  && t.amount <= 0) return false;
+                if (currentFilter === "expense" && t.amount >= 0) return false;
+                if (currentFilterCategory !== "all") {
+                    if (!t.category.toLowerCase().includes(currentFilterCategory.toLowerCase())) return false;
+                }
+                return true;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                if (currentSort === "date-desc")    return new Date(b.date) - new Date(a.date);
+                if (currentSort === "date-asc")     return new Date(a.date) - new Date(b.date);
+                if (currentSort === "amount-desc")  return Math.abs(b.amount) - Math.abs(a.amount);
+                if (currentSort === "amount-asc")   return Math.abs(a.amount) - Math.abs(b.amount);
+                if (currentSort === "category")     return a.category.localeCompare(b.category);
+                return 0;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5"><div class="no-results"><i class="fas fa-search" style="font-size:2rem;margin-bottom:0.5rem;display:block"></i>No transactions match your filters</div></td></tr>`;
+                return;
+            }
+
+            filtered.slice(0, 10).forEach(transaction => {
+                const row = document.createElement("tr");
+                const formattedDate = new Date(transaction.date).toLocaleDateString("en-US", {
+                    month: "short", day: "numeric", year: "numeric"
+                });
+                const amountDisplay = transaction.amount > 0
+                    ? `+$${transaction.amount.toLocaleString()}.00`
+                    : `-$${Math.abs(transaction.amount).toLocaleString()}.00`;
+
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${transaction.category}</td>
+                    <td style="color: ${transaction.amount > 0 ? '#10b981' : '#ef4444'}">${amountDisplay}</td>
+                    <td><span class="status-success">${transaction.status}</span></td>
+                    <td><button class="action-btn"><i class="fas fa-ellipsis-h"></i></button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function showNotification(message, type = "success") {
+            const notification = document.createElement("div");
+            notification.style.cssText = `
+                position: fixed; top: 2rem; right: 2rem;
+                background: ${type === "success" ? "#10b981" : "#ef4444"};
+                color: white; padding: 1rem 1.5rem; border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001;
+                animation: slideInRight 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = "slideOutRight 0.3s ease";
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") { closeModal("incomeModal"); closeModal("expenseModal"); }
+            if (e.ctrlKey && e.key === "i") { e.preventDefault(); openIncomeModal(); }
+            if (e.ctrlKey && e.key === "e") { e.preventDefault(); openExpenseModal(); }
+        });
+
+        document.querySelectorAll(".card").forEach(card => {
+            card.addEventListener("mouseenter", function() {
+                this.style.transform    = "translateY(-2px)";
+                this.style.boxShadow    = "0 4px 12px rgba(0,0,0,0.15)";
+                this.style.transition   = "all 0.2s ease";
+            });
+            card.addEventListener("mouseleave", function() {
+                this.style.transform = "translateY(0)";
+                this.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+            });
+        });
+
+        // ── Sort & Filter ─────────────────────────────────────────
+        let currentSort   = "date-desc";
+        let currentFilter = "all";
+        let currentFilterCategory = "all";
+
+        function toggleSortDropdown() {
+            document.getElementById("sortDropdown").classList.toggle("open");
+            document.getElementById("filterDropdown").classList.remove("open");
+        }
+
+        function toggleFilterDropdown() {
+            document.getElementById("filterDropdown").classList.toggle("open");
+            document.getElementById("sortDropdown").classList.remove("open");
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest(".filter-controls")) {
+                document.getElementById("sortDropdown").classList.remove("open");
+                document.getElementById("filterDropdown").classList.remove("open");
+            }
+        });
+
+        function applySort(type) {
+            currentSort = type;
+            // Mark active
+            document.querySelectorAll("#sortDropdown .filter-option").forEach(o => o.classList.remove("active"));
+            document.getElementById("sort-" + type).classList.add("active");
+            document.getElementById("sortDropdown").classList.remove("open");
+            document.getElementById("sortBtn").classList.add("active-filter");
+            updateTransactionsTable();
+            updateActiveFilterTags();
+        }
+
+        function applyFilter(type) {
+            currentFilter = type;
+            document.querySelectorAll("#filterDropdown .filter-option[id^='filter-a'], #filterDropdown .filter-option[id^='filter-i'], #filterDropdown .filter-option[id^='filter-e']").forEach(o => o.classList.remove("active"));
+            const el = document.getElementById("filter-" + type);
+            if (el) el.classList.add("active");
+            document.getElementById("filterDropdown").classList.remove("open");
+            updateFilterBtnState();
+            updateTransactionsTable();
+            updateActiveFilterTags();
+        }
+
+        function applyFilterCategory(cat) {
+            currentFilterCategory = cat;
+            document.querySelectorAll("#filterDropdown .filter-option[id^='filter-cat']").forEach(o => o.classList.remove("active"));
+            const el = document.getElementById("filter-cat-" + cat);
+            if (el) el.classList.add("active");
+            document.getElementById("filterDropdown").classList.remove("open");
+            updateFilterBtnState();
+            updateTransactionsTable();
+            updateActiveFilterTags();
+        }
+
+        function clearAllFilters() {
+            currentFilter = "all";
+            currentFilterCategory = "all";
+            currentSort = "date-desc";
+            document.getElementById("filterDropdown").classList.remove("open");
+            document.getElementById("sortDropdown").classList.remove("open");
+            document.getElementById("filterBtn").classList.remove("active-filter");
+            document.getElementById("sortBtn").classList.remove("active-filter");
+            updateTransactionsTable();
+            updateActiveFilterTags();
+        }
+
+        function updateFilterBtnState() {
+            const isFiltered = currentFilter !== "all" || currentFilterCategory !== "all";
+            document.getElementById("filterBtn").classList.toggle("active-filter", isFiltered);
+        }
+
+        function updateActiveFilterTags() {
+            const container = document.getElementById("activeFilters");
+            container.innerHTML = "";
+
+            if (currentFilter !== "all") {
+                const tag = document.createElement("span");
+                tag.className = "filter-tag";
+                tag.innerHTML = `${currentFilter === "income" ? "Income Only" : "Expenses Only"} <i class="fas fa-times"></i>`;
+                tag.onclick = () => applyFilter("all");
+                container.appendChild(tag);
+            }
+
+            if (currentFilterCategory !== "all") {
+                const tag = document.createElement("span");
+                tag.className = "filter-tag";
+                tag.innerHTML = `${currentFilterCategory.charAt(0).toUpperCase() + currentFilterCategory.slice(1)} <i class="fas fa-times"></i>`;
+                tag.onclick = () => applyFilterCategory("all");
+                container.appendChild(tag);
+            }
+
+            if (currentSort !== "date-desc") {
+                const labels = { "date-asc": "Oldest First", "amount-desc": "Amount ↓", "amount-asc": "Amount ↑", "category": "Category A-Z" };
+                const tag = document.createElement("span");
+                tag.className = "filter-tag";
+                tag.innerHTML = `Sort: ${labels[currentSort]} <i class="fas fa-times"></i>`;
+                tag.onclick = () => applySort("date-desc");
+                container.appendChild(tag);
+            }
+        }
+
+        // ── Boot: check if already logged in ─────────────────────
+        document.addEventListener("DOMContentLoaded", function() {
+            if (getToken()) {
+                showDashboard();
+            } else {
+                document.getElementById("authScreen").classList.add("active");
+            }
+            updateTransactionsTable();
+        });
+
+        // ── Period data sets ──────────────────────────────────────
+        const periodData = {
+            Daily: {
+                income: 245, expenses: 87,
+                cardTitle: "Daily Income", expTitle: "Daily Expenses",
+                chartBars: [60,40,100,80,45,55,65,50,42,130,90,70],
+                chartLabel: "Today", chartIncome: 245, chartExpense: 87,
+                expTotal: "$87.00", expValues: ["$12","$35","$40"],
+                expCats: [12, 35, 40, 0]
+            },
+            Weekly: {
+                income: 1340, expenses: 620,
+                cardTitle: "Weekly Income", expTitle: "Weekly Expenses",
+                chartBars: [80,60,120,90,70,110,95,75,85,140,100,60],
+                chartLabel: "This Week", chartIncome: 1340, chartExpense: 620,
+                expTotal: "$620.00", expValues: ["$145","$238","$237"],
+                expCats: [145, 238, 237, 0]
+            },
+            Monthly: {
+                income: 2645, expenses: 1895,
+                cardTitle: "Monthly Income", expTitle: "Monthly Expenses",
+                chartBars: [120,80,200,150,90,110,130,100,85,160,120,95],
+                chartLabel: "April 2025", chartIncome: 2645, chartExpense: 1895,
+                expTotal: "$1,895.00", expValues: ["$863","$248","$784"],
+                expCats: [863, 248, 784, 0]
+            },
+            Yearly: {
+                income: 31740, expenses: 22740,
+                cardTitle: "Yearly Income", expTitle: "Yearly Expenses",
+                chartBars: [100,110,130,160,140,170,150,180,120,140,130,200],
+                chartLabel: "2025", chartIncome: 31740, chartExpense: 22740,
+                expTotal: "$22,740.00", expValues: ["$8,200","$3,540","$11,000"],
+                expCats: [8200, 3540, 11000, 0]
+            }
+        };
+
+        let currentPeriod = "Monthly";
+
+        // ── Period Dropdown (header) ──────────────────────────────
+        function togglePeriodDropdown(e) {
+            e.stopPropagation();
+            document.getElementById("periodMenu").classList.toggle("open");
+        }
+
+        function selectPeriod(value, e) {
+            e.stopPropagation();
+            currentPeriod = value;
+            document.getElementById("periodLabel").textContent = value;
+            document.querySelectorAll("#periodMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            e.target.classList.add("active");
+            document.getElementById("periodMenu").classList.remove("open");
+            applyPeriodData(value);
+            showNotification(`View changed to: ${value}`, "success");
+        }
+
+        function applyPeriodData(period) {
+            const d = periodData[period];
+            if (!d) return;
+
+            // Update income/expense card titles and amounts
+            document.querySelector(".card-title.income-title")  && (document.querySelector(".card-title.income-title").textContent  = d.cardTitle);
+            document.querySelector(".card-title.expense-title") && (document.querySelector(".card-title.expense-title").textContent = d.expTitle);
+            document.querySelector(".income-amount").textContent  = "$" + d.income.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.querySelector(".expense-amount").textContent = "$" + d.expenses.toLocaleString("en-US", {minimumFractionDigits:2});
+
+            // Update spending on card
+            cardSpendingUsed = d.expenses;
+            const pct = Math.min((cardSpendingUsed / cardSpendingLimit) * 100, 100).toFixed(1);
+            document.querySelector(".spending-limit").textContent = "$" + cardSpendingUsed.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.querySelector(".spending-used").textContent  = "used from $" + cardSpendingLimit.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.querySelector(".progress-fill").style.width  = pct + "%";
+
+            // Update chart bars
+            const bars = document.querySelectorAll(".chart-bar:not(.active)");
+            d.chartBars.slice(0, bars.length).forEach((h, i) => { bars[i] && (bars[i].style.height = h + "px"); });
+
+            // Update active bar tooltip
+            const tooltip = document.querySelector(".chart-bar.active .chart-tooltip");
+            if (tooltip) {
+                tooltip.querySelector(".tooltip-label").textContent  = d.chartLabel;
+                tooltip.querySelector(".tooltip-income").textContent = "Income: $" + d.chartIncome.toLocaleString();
+                tooltip.querySelector(".tooltip-expense").textContent= "Expenses: $" + d.chartExpense.toLocaleString();
+            }
+
+            // Update expense breakdown total
+            const totalEl = document.querySelector(".total-expenses");
+            if (totalEl) totalEl.textContent = d.expTotal;
+
+            // Update period tabs values
+            const vals = document.querySelectorAll(".period-values span");
+            d.expValues.forEach((v, i) => { if (vals[i]) vals[i].textContent = v; });
+
+            // Sync expense card to same period
+            currentExpPeriod = period;
+            document.getElementById("expPeriodLabel").textContent = period;
+            document.querySelectorAll("#expPeriodMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            const epItem = document.getElementById("expPd-" + period);
+            if (epItem) epItem.classList.add("active");
+            document.querySelectorAll(".period-tab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".period-tab").forEach(t => { if (t.textContent === period) t.classList.add("active"); });
+            if (typeof renderExpenseCard === "function") renderExpenseCard();
+
+            // Update category amounts
+            const catAmounts = document.querySelectorAll(".expense-category .cat-amount");
+            const cats = ["Food & Health", "Entertainments", "Shopping", "Investment"];
+            d.expCats.forEach((amt, i) => {
+                if (catAmounts[i]) catAmounts[i].textContent = "$" + amt.toLocaleString();
+            });
+        }
+
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest("#periodDropdown")) {
+                const menu = document.getElementById("periodMenu");
+                if (menu) menu.classList.remove("open");
+            }
+        });
+
+        // ── Header Date Picker ────────────────────────────────────
+        function updateHeaderDate(value) {
+            if (!value) return;
+            const d = new Date(value + "T00:00:00");
+            document.getElementById("currentDate").textContent = d.toLocaleDateString("en-US", {
+                day: "numeric", month: "long", year: "numeric"
+            });
+        }
+
+        // ── Export ────────────────────────────────────────────────
+        function exportDashboard() {
+            const rows = [["Date", "Category", "Amount", "Status", "Type"]];
+            transactions.forEach(t => {
+                rows.push([
+                    t.date,
+                    t.category,
+                    (t.amount > 0 ? "+" : "") + "$" + Math.abs(t.amount).toFixed(2),
+                    t.status,
+                    t.type
+                ]);
+            });
+
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement("a");
+            a.href     = url;
+            a.download = "finance-export.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification("Exported as CSV successfully!", "success");
+        }
+
+        // ── All Expenses Card — full logic ────────────────────────
+        const expData = {
+            Daily: {
+                total: 87,
+                cats: [
+                    { key:"food",          label:"Food & Health",   color:"#ea580c", dot:"dot-food",          amt: 32 },
+                    { key:"entertainment", label:"Entertainment",    color:"#f59e0b", dot:"dot-entertainment",  amt: 18 },
+                    { key:"shopping",      label:"Shopping",         color:"#eab308", dot:"dot-shopping",       amt: 24 },
+                    { key:"investment",    label:"Investment",       color:"#10b981", dot:"dot-investment",     amt: 13 },
+                ]
+            },
+            Weekly: {
+                total: 620,
+                cats: [
+                    { key:"food",          label:"Food & Health",   color:"#ea580c", dot:"dot-food",          amt: 145 },
+                    { key:"entertainment", label:"Entertainment",    color:"#f59e0b", dot:"dot-entertainment",  amt: 238 },
+                    { key:"shopping",      label:"Shopping",         color:"#eab308", dot:"dot-shopping",       amt: 182 },
+                    { key:"investment",    label:"Investment",       color:"#10b981", dot:"dot-investment",     amt: 55  },
+                ]
+            },
+            Monthly: {
+                total: 1895,
+                cats: [
+                    { key:"food",          label:"Food & Health",   color:"#ea580c", dot:"dot-food",          amt: 863 },
+                    { key:"entertainment", label:"Entertainment",    color:"#f59e0b", dot:"dot-entertainment",  amt: 248 },
+                    { key:"shopping",      label:"Shopping",         color:"#eab308", dot:"dot-shopping",       amt: 784 },
+                    { key:"investment",    label:"Investment",       color:"#10b981", dot:"dot-investment",     amt:   0 },
+                ]
+            },
+            Yearly: {
+                total: 22740,
+                cats: [
+                    { key:"food",          label:"Food & Health",   color:"#ea580c", dot:"dot-food",          amt: 8200 },
+                    { key:"entertainment", label:"Entertainment",    color:"#f59e0b", dot:"dot-entertainment",  amt: 3540 },
+                    { key:"shopping",      label:"Shopping",         color:"#eab308", dot:"dot-shopping",       amt:11000 },
+                    { key:"investment",    label:"Investment",       color:"#10b981", dot:"dot-investment",     amt: 0    },
+                ]
+            }
+        };
+
+        let currentExpPeriod = "Monthly";
+        let currentExpCat    = "all";
+
+        function renderExpenseCard() {
+            const d    = expData[currentExpPeriod];
+            const cats = currentExpCat === "all" ? d.cats : d.cats.filter(c => c.key === currentExpCat);
+            const shownTotal = cats.reduce((s,c) => s + c.amt, 0);
+            const maxAmt     = Math.max(...cats.map(c => c.amt), 1);
+
+            // Total display
+            document.getElementById("expTotalDisplay").textContent = "$" + shownTotal.toLocaleString("en-US", {minimumFractionDigits:2});
+
+            // Subtitle
+            const subtitle = currentExpCat === "all"
+                ? `Spending breakdown by category · ${currentExpPeriod}`
+                : `${cats[0]?.label || ""} only · ${currentExpPeriod}`;
+            document.getElementById("expSubtitle").textContent = subtitle;
+
+            // Visual bars
+            const barsEl = document.getElementById("expCategoryBars");
+            barsEl.innerHTML = "";
+            cats.forEach(cat => {
+                const pct = maxAmt > 0 ? (cat.amt / maxAmt * 100).toFixed(1) : 0;
+                const ofTotal = shownTotal > 0 ? (cat.amt / shownTotal * 100).toFixed(0) : 0;
+                barsEl.innerHTML += `
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.25rem;">
+                            <span style="display:flex;align-items:center;gap:0.4rem;">
+                                <span style="width:8px;height:8px;border-radius:50%;background:${cat.color};display:inline-block;"></span>
+                                ${cat.label}
+                            </span>
+                            <span style="font-weight:600;color:${cat.color};">$${cat.amt.toLocaleString()} <span style="color:#9ca3af;font-weight:400;">(${ofTotal}%)</span></span>
+                        </div>
+                        <div style="height:7px;background:#f3f4f6;border-radius:4px;overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:${cat.color};border-radius:4px;transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>`;
+            });
+
+            // List
+            const listEl = document.getElementById("expCategoryList");
+            listEl.innerHTML = "";
+            if (cats.length === 0) {
+                listEl.innerHTML = `<li style="text-align:center;color:#9ca3af;padding:1rem;font-size:0.85rem;">No data for this filter</li>`;
+                return;
+            }
+            cats.forEach(cat => {
+                listEl.innerHTML += `
+                    <li class="expense-category" style="cursor:pointer;" onclick="selectExpCatFromList('${cat.key}')">
+                        <div class="category-info">
+                            <div class="category-dot ${cat.dot}"></div>
+                            <span>${cat.label}</span>
+                        </div>
+                        <span class="cat-amount" style="color:${cat.color};font-weight:600;">$${cat.amt.toLocaleString()}</span>
+                    </li>`;
+            });
+        }
+
+        // Period dropdown in All Expenses card
+        function toggleExpPeriodDropdown(e) {
+            e.stopPropagation();
+            document.getElementById("expPeriodMenu").classList.toggle("open");
+            document.getElementById("expCatMenu").classList.remove("open");
+        }
+
+        function selectExpPeriod(period, e) {
+            e.stopPropagation();
+            currentExpPeriod = period;
+            document.getElementById("expPeriodLabel").textContent = period;
+            document.querySelectorAll("#expPeriodMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            document.getElementById("expPd-" + period).classList.add("active");
+            document.getElementById("expPeriodMenu").classList.remove("open");
+            renderExpenseCard();
+        }
+
+        // Category filter dropdown
+        function toggleExpCatDropdown(e) {
+            e.stopPropagation();
+            document.getElementById("expCatMenu").classList.toggle("open");
+            document.getElementById("expPeriodMenu").classList.remove("open");
+        }
+
+        function selectExpCat(cat, e) {
+            e.stopPropagation();
+            currentExpCat = cat;
+            const labels = {all:"Filter", food:"Food", entertainment:"Entertain.", shopping:"Shopping", investment:"Investment"};
+            document.getElementById("expCatLabel").textContent = labels[cat];
+            document.querySelectorAll("#expCatMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            document.getElementById("expCat-" + cat).classList.add("active");
+            document.getElementById("expCatMenu").classList.remove("open");
+            renderExpenseCard();
+        }
+
+        function selectExpCatFromList(cat) {
+            currentExpCat = cat === currentExpCat ? "all" : cat;
+            const labels = {all:"Filter", food:"Food", entertainment:"Entertain.", shopping:"Shopping", investment:"Investment"};
+            document.getElementById("expCatLabel").textContent = labels[currentExpCat];
+            document.querySelectorAll("#expCatMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            document.getElementById("expCat-" + currentExpCat).classList.add("active");
+            renderExpenseCard();
+        }
+
+        // Old period tab function — now delegates to full render
+        function selectExpensePeriod(period, el) {
+            document.querySelectorAll(".period-tab").forEach(t => t.classList.remove("active"));
+            el.classList.add("active");
+            currentExpPeriod = period;
+            document.getElementById("expPeriodLabel").textContent = period;
+            document.querySelectorAll("#expPeriodMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            const menuItem = document.getElementById("expPd-" + period);
+            if (menuItem) menuItem.classList.add("active");
+            renderExpenseCard();
+        }
+
+        // View All modal
+        function openExpAllDetails() {
+            document.querySelectorAll(".card-menu-dropdown").forEach(m => m.classList.remove("open"));
+            const d = expData[currentExpPeriod];
+            const rows = d.cats.map(c => `
+                <tr>
+                    <td style="padding:0.7rem 0.5rem;"><span style="display:flex;align-items:center;gap:0.5rem;"><span style="width:8px;height:8px;border-radius:50%;background:${c.color};display:inline-block;"></span>${c.label}</span></td>
+                    <td style="padding:0.7rem 0.5rem;font-weight:600;color:${c.color};">$${c.amt.toLocaleString()}</td>
+                    <td style="padding:0.7rem 0.5rem;color:#6b7280;">${d.total > 0 ? (c.amt/d.total*100).toFixed(1) : 0}%</td>
+                    <td style="padding:0.7rem 0.5rem;">
+                        <div style="height:6px;background:#f3f4f6;border-radius:3px;width:100px;overflow:hidden;">
+                            <div style="height:100%;width:${d.total > 0 ? (c.amt/d.total*100) : 0}%;background:${c.color};border-radius:3px;"></div>
+                        </div>
+                    </td>
+                </tr>`).join("");
+
+            document.getElementById("detailsModalTitle").innerHTML =
+                `<i class="fas fa-chart-pie" style="color:#ea580c;margin-right:0.5rem;"></i>All Expenses — ${currentExpPeriod}`;
+            document.getElementById("detailsModalContent").innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#fef3f2;border-radius:10px;padding:1rem;margin-bottom:1.2rem;">
+                    <div><div style="font-size:0.75rem;color:#9ca3af;">Total ${currentExpPeriod} Expenses</div>
+                    <div style="font-size:1.6rem;font-weight:700;color:#ea580c;">$${d.total.toLocaleString("en-US",{minimumFractionDigits:2})}</div></div>
+                    <i class="fas fa-chart-pie" style="font-size:2rem;color:#fca5a5;"></i>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead><tr style="border-bottom:2px solid #e5e7eb;">
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Category</th>
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Amount</th>
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Share</th>
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Bar</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+            const btn = document.getElementById("detailsAddBtn");
+            btn.textContent = "Add Expense";
+            btn.style.background = "#ea580c";
+            btn.onclick = () => { closeModal("detailsModal"); openExpenseModal(); };
+            document.getElementById("detailsModal").style.display = "block";
+        }
+
+        // Export expenses as CSV
+        function exportExpenseCSV() {
+            document.querySelectorAll(".card-menu-dropdown").forEach(m => m.classList.remove("open"));
+            const d = expData[currentExpPeriod];
+            const rows = [["Category","Amount","Percentage"]];
+            d.cats.forEach(c => rows.push([c.label, "$"+c.amt.toLocaleString(), (d.total>0?(c.amt/d.total*100).toFixed(1):0)+"%"]));
+            const csv = rows.map(r => r.map(x => `"${x}"`).join(",")).join("\n");
+            const blob = new Blob([csv], {type:"text/csv"});
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement("a");
+            a.href = url; a.download = `expenses-${currentExpPeriod.toLowerCase()}.csv`; a.click();
+            URL.revokeObjectURL(url);
+            showNotification("Expenses exported!", "success");
+        }
+
+        // Close exp dropdowns on outside click
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest("#expPeriodDropdown")) document.getElementById("expPeriodMenu")?.classList.remove("open");
+            if (!e.target.closest("#expCatDropdown"))    document.getElementById("expCatMenu")?.classList.remove("open");
+        });
+
+
+
+        // ── Card Menu (... buttons) ───────────────────────────────
+        function toggleCardMenu(id, e) {
+            e.stopPropagation();
+            const menu = document.getElementById(id);
+            const isOpen = menu.classList.contains("open");
+            // Close all card menus first
+            document.querySelectorAll(".card-menu-dropdown").forEach(m => m.classList.remove("open"));
+            if (!isOpen) menu.classList.add("open");
+        }
+
+        // ── Overview Chart Data ───────────────────────────────────
+        const overviewChartData = {
+            Monthly: {
+                labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+                income:  [180, 210, 195, 230, 245, 220, 260, 240, 215, 250, 235, 270],
+                expense: [120, 140, 130, 160, 150, 135, 170, 155, 140, 165, 150, 180],
+                activeIdx: 3, activeLabel: "April 2025"
+            },
+            Quarterly: {
+                labels: ["Q1 '24","Q2 '24","Q3 '24","Q4 '24","Q1 '25","Q2 '25","Q3 '25","Q4 '25"],
+                income:  [580, 695, 725, 780, 630, 715, 760, 810],
+                expense: [390, 445, 470, 510, 420, 480, 495, 530],
+                activeIdx: 4, activeLabel: "Q1 2025"
+            },
+            Yearly: {
+                labels: ["2019","2020","2021","2022","2023","2024","2025"],
+                income:  [1800, 1650, 2100, 2450, 2800, 3100, 3174],
+                expense: [1400, 1300, 1600, 1900, 2100, 2350, 2274],
+                activeIdx: 5, activeLabel: "2024"
+            }
+        };
+
+        let currentOverviewPeriod = "Yearly";
+        let currentOverviewFilter = "both";
+
+        function renderOverviewChart() {
+            const d       = overviewChartData[currentOverviewPeriod];
+            const filter  = currentOverviewFilter;
+            const container = document.querySelector(".chart-container");
+            const labelsEl  = document.querySelector(".chart-labels");
+            if (!container || !d) return;
+
+            // max for scaling
+            const allVals = [
+                ...(filter !== "expense" ? d.income  : []),
+                ...(filter !== "income"  ? d.expense : [])
+            ];
+            const maxVal = Math.max(...allVals, 1);
+            const maxH   = 180; // px
+
+            container.innerHTML = "";
+            labelsEl.innerHTML  = "";
+
+            d.labels.forEach((lbl, i) => {
+                const incH = Math.round((d.income[i]  / maxVal) * maxH);
+                const expH = Math.round((d.expense[i] / maxVal) * maxH);
+                const isActive = i === d.activeIdx;
+
+                const bar = document.createElement("div");
+                bar.className = "chart-bar" + (isActive ? " active" : "");
+
+                let innerHTML = "";
+                if (isActive) {
+                    innerHTML += `
+                        <div class="chart-tooltip" style="position:absolute;top:-70px;left:50%;transform:translateX(-50%);background:white;padding:0.35rem 0.6rem;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,0.13);font-size:0.72rem;white-space:nowrap;z-index:10;">
+                            <div class="tooltip-label" style="font-weight:700;margin-bottom:2px;">${d.activeLabel}</div>
+                            ${filter !== "expense" ? `<div class="tooltip-income"  style="color:#10b981;">Income: $${d.income[i].toLocaleString()}</div>` : ""}
+                            ${filter !== "income"  ? `<div class="tooltip-expense" style="color:#ea580c;">Expenses: $${d.expense[i].toLocaleString()}</div>` : ""}
+                        </div>`;
+                }
+
+                if (filter === "income") {
+                    innerHTML += `<div class="chart-bar-income" style="height:${incH}px;"></div>`;
+                    bar.style.height = incH + "px";
+                } else if (filter === "expense") {
+                    innerHTML += `<div class="chart-bar-expense" style="height:${expH}px;"></div>`;
+                    bar.style.height = expH + "px";
+                } else {
+                    innerHTML += `<div class="chart-bar-income" style="height:${incH}px;"></div>
+                                  <div class="chart-bar-expense" style="height:${expH}px;"></div>`;
+                    bar.style.height = (incH + expH) + "px";
+                }
+
+                bar.innerHTML = innerHTML;
+
+                // hover tooltip for non-active bars
+                bar.title = `${lbl}: Income $${d.income[i].toLocaleString()} | Exp $${d.expense[i].toLocaleString()}`;
+                bar.style.cursor = "pointer";
+                bar.addEventListener("click", function() {
+                    // Make clicked bar the active one
+                    overviewChartData[currentOverviewPeriod].activeIdx   = i;
+                    overviewChartData[currentOverviewPeriod].activeLabel = lbl;
+                    renderOverviewChart();
+                });
+
+                container.appendChild(bar);
+
+                const labelSpan = document.createElement("span");
+                labelSpan.textContent = lbl;
+                labelsEl.appendChild(labelSpan);
+            });
+        }
+
+        // ── Overview Year Dropdown ────────────────────────────────
+        function toggleOverviewYearDropdown(e) {
+            e.stopPropagation();
+            document.getElementById("overviewYearMenu").classList.toggle("open");
+            document.getElementById("overviewFilterMenu").classList.remove("open");
+        }
+
+        function selectOverviewYear(value, e) {
+            e.stopPropagation();
+            currentOverviewPeriod = value;
+            document.getElementById("overviewYearLabel").textContent = value;
+            document.querySelectorAll("#overviewYearMenu .dropdown-menu-item").forEach(i => i.classList.remove("active"));
+            e.target.classList.add("active");
+            document.getElementById("overviewYearMenu").classList.remove("open");
+            renderOverviewChart();
+        }
+
+        // ── Overview Filter Button ────────────────────────────────
+        function toggleOverviewFilter(e) {
+            e.stopPropagation();
+            document.getElementById("overviewFilterMenu").classList.toggle("open");
+            document.getElementById("overviewYearMenu").classList.remove("open");
+        }
+
+        function applyOverviewFilter(type) {
+            currentOverviewFilter = type;
+            document.querySelectorAll("#overviewFilterMenu .filter-option").forEach(o => o.classList.remove("active"));
+            document.getElementById("ovf-" + type).classList.add("active");
+            document.getElementById("overviewFilterMenu").classList.remove("open");
+            document.getElementById("overviewFilterBtn").classList.toggle("active-filter", type !== "both");
+            renderOverviewChart();
+        }
+
+        // ── Global click-outside to close all dropdowns/menus ────
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest("#periodDropdown"))      document.getElementById("periodMenu")?.classList.remove("open");
+            if (!e.target.closest("#overviewYearDropdown")) document.getElementById("overviewYearMenu")?.classList.remove("open");
+            if (!e.target.closest("#overviewFilterBtn") && !e.target.closest("#overviewFilterMenu"))
+                document.getElementById("overviewFilterMenu")?.classList.remove("open");
+            if (!e.target.closest(".card-menu"))
+                document.querySelectorAll(".card-menu-dropdown").forEach(m => m.classList.remove("open"));
+        });
+
+        // ── Card Details Modal ────────────────────────────────────
+        function openCardDetailsModal() {
+            document.querySelectorAll(".card-menu-dropdown").forEach(m => m.classList.remove("open"));
+            document.getElementById("cardDetailsModal").style.display = "block";
+        }
+
+        let cvvVisible = false;
+        function toggleCVV() {
+            cvvVisible = !cvvVisible;
+            const display = document.getElementById("cvvDisplay");
+            display.innerHTML = cvvVisible
+                ? `739 <button onclick="toggleCVV()" style="background:none;border:none;cursor:pointer;color:#059669;font-size:0.75rem;margin-left:4px;" id="cvvToggle"><i class="fas fa-eye-slash"></i></button>`
+                : `••• <button onclick="toggleCVV()" style="background:none;border:none;cursor:pointer;color:#059669;font-size:0.75rem;margin-left:4px;" id="cvvToggle"><i class="fas fa-eye"></i></button>`;
+        }
+
+        // ── Income / Expense Details Modal ────────────────────────
+        function openDetailsModal(type) {
+            document.querySelectorAll(".card-menu-dropdown").forEach(m => m.classList.remove("open"));
+            const d = periodData[currentPeriod];
+            const isIncome = type === "income";
+            const amount   = isIncome ? d.income : d.expenses;
+            const color    = isIncome ? "#10b981" : "#ef4444";
+            const icon     = isIncome ? "fa-arrow-up" : "fa-arrow-down";
+            const label    = isIncome ? "Income" : "Expenses";
+            const relTxns  = transactions.filter(t => isIncome ? t.amount > 0 : t.amount < 0).slice(0, 5);
+
+            document.getElementById("detailsModalTitle").innerHTML =
+                `<i class="fas ${icon}" style="color:${color};margin-right:0.5rem;"></i>${currentPeriod} ${label} Details`;
+
+            const btn = document.getElementById("detailsAddBtn");
+            btn.textContent = isIncome ? "Add Income" : "Add Expense";
+            btn.onclick = () => { closeModal("detailsModal"); isIncome ? openIncomeModal() : openExpenseModal(); };
+            btn.style.background = color;
+
+            const prevAmt = Math.round(amount * 0.88);
+            const pctChange = (((amount - prevAmt) / prevAmt) * 100).toFixed(1);
+
+            let txnRows = relTxns.length > 0
+                ? relTxns.map(t => `
+                    <tr>
+                        <td style="padding:0.6rem 0.5rem;font-size:0.82rem;">${new Date(t.date+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}</td>
+                        <td style="padding:0.6rem 0.5rem;font-size:0.82rem;">${t.category}</td>
+                        <td style="padding:0.6rem 0.5rem;font-size:0.82rem;color:${color};font-weight:600;">${t.amount > 0 ? "+" : "-"}$${Math.abs(t.amount).toLocaleString()}</td>
+                    </tr>`).join("")
+                : `<tr><td colspan="3" style="padding:1rem;text-align:center;color:#9ca3af;font-size:0.85rem;">No transactions yet</td></tr>`;
+
+            document.getElementById("detailsModalContent").innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                    <div style="background:#f8fafc;border-radius:10px;padding:1rem;text-align:center;">
+                        <div style="font-size:0.75rem;color:#6b7280;margin-bottom:0.3rem;">Total (${currentPeriod})</div>
+                        <div style="font-size:1.5rem;font-weight:700;color:${color};">$${amount.toLocaleString("en-US",{minimumFractionDigits:2})}</div>
+                    </div>
+                    <div style="background:#f8fafc;border-radius:10px;padding:1rem;text-align:center;">
+                        <div style="font-size:0.75rem;color:#6b7280;margin-bottom:0.3rem;">vs Previous Period</div>
+                        <div style="font-size:1.5rem;font-weight:700;color:#10b981;">+${pctChange}%</div>
+                        <div style="font-size:0.72rem;color:#6b7280;">prev: $${prevAmt.toLocaleString()}</div>
+                    </div>
+                </div>
+                <div style="margin-bottom:0.5rem;font-weight:600;font-size:0.875rem;color:#374151;">Recent Transactions</div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead><tr style="border-bottom:1px solid #e5e7eb;">
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Date</th>
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Category</th>
+                        <th style="text-align:left;padding:0.5rem;font-size:0.75rem;color:#6b7280;">Amount</th>
+                    </tr></thead>
+                    <tbody>${txnRows}</tbody>
+                </table>`;
+
+            document.getElementById("detailsModal").style.display = "block";
+        }
+
+        // ── Boot: apply current period data ───────────────────────
+        document.addEventListener("DOMContentLoaded", function() {
+            applyPeriodData("Monthly");
+            renderExpenseCard();
+            renderOverviewChart();
+        });
+
+    </script>
+
+    <script>
+        // ── Limit Management ──────────────────────────────────────
+        let cardSpendingUsed  = 4645;
+        let cardSpendingLimit = 12645;
+
+        function openLimitModal() {
+            document.getElementById("newLimitInput").value = "";
+            document.getElementById("alertThreshold").value = 80;
+            document.getElementById("alertPct").textContent = "80%";
+            document.getElementById("limitPreviewBox").style.display = "none";
+            document.querySelectorAll(".limit-preset").forEach(b => b.classList.remove("selected"));
+            refreshLimitSummary();
+            document.getElementById("limitModal").style.display = "block";
+        }
+
+        function refreshLimitSummary() {
+            const remaining = cardSpendingLimit - cardSpendingUsed;
+            const pct = Math.min((cardSpendingUsed / cardSpendingLimit) * 100, 100).toFixed(1);
+            document.getElementById("limitSummaryTotal").textContent     = "$" + cardSpendingLimit.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.getElementById("limitSummaryUsed").textContent      = "$" + cardSpendingUsed.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.getElementById("limitSummaryRemaining").textContent = "$" + Math.max(remaining,0).toLocaleString("en-US", {minimumFractionDigits:2});
+            document.getElementById("limitSummaryBar").style.width       = pct + "%";
+        }
+
+        function updateLimitPreview(val) {
+            const newLimit = parseFloat(val);
+            document.querySelectorAll(".limit-preset").forEach(b => b.classList.remove("selected"));
+            if (!val || isNaN(newLimit) || newLimit <= 0) {
+                document.getElementById("limitPreviewBox").style.display = "none";
+                return;
+            }
+            document.getElementById("limitPreviewBox").style.display = "block";
+            const remaining = Math.max(newLimit - cardSpendingUsed, 0);
+            const pct = Math.min((cardSpendingUsed / newLimit) * 100, 100).toFixed(1);
+            document.getElementById("previewLimit").textContent     = "$" + newLimit.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.getElementById("previewRemaining").textContent = "$" + remaining.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.getElementById("previewBar").style.width       = pct + "%";
+            document.getElementById("previewBar").style.background  = pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#059669";
+        }
+
+        function setLimitPreset(val) {
+            document.getElementById("newLimitInput").value = val;
+            document.querySelectorAll(".limit-preset").forEach(b => b.classList.remove("selected"));
+            event.target.classList.add("selected");
+            updateLimitPreview(val);
+        }
+
+        function applyNewLimit() {
+            const input    = document.getElementById("newLimitInput");
+            const newLimit = parseFloat(input.value);
+            const alertPct = parseInt(document.getElementById("alertThreshold").value);
+
+            if (!input.value || isNaN(newLimit) || newLimit <= 0) {
+                showNotification("Please enter a valid limit amount.", "error");
+                return;
+            }
+            if (newLimit < cardSpendingUsed) {
+                showNotification(`Limit cannot be less than current spend ($${cardSpendingUsed.toLocaleString()}).`, "error");
+                return;
+            }
+
+            cardSpendingLimit = newLimit;
+
+            // Update card UI
+            const pct = Math.min((cardSpendingUsed / cardSpendingLimit) * 100, 100).toFixed(1);
+            document.querySelector(".spending-limit").textContent = "$" + cardSpendingLimit.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.querySelector(".spending-used").textContent  = "used from $" + cardSpendingLimit.toLocaleString("en-US", {minimumFractionDigits:2});
+            document.querySelector(".progress-fill").style.width  = pct + "%";
+
+            closeModal("limitModal");
+            showNotification(`Spending limit updated to $${cardSpendingLimit.toLocaleString()} (alert at ${alertPct}%)`, "success");
+        }
+
+    </script>
+</body>
+</html>
