@@ -1,11 +1,13 @@
 package com.finance.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "transactions")
 @Data
@@ -20,6 +22,9 @@ public class Transaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"transactions", "password", "authorities",
+            "accountNonExpired", "accountNonLocked",
+            "credentialsNonExpired", "enabled"})
     private User user;
 
     @Column(nullable = false)
@@ -27,7 +32,7 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TransactionType type; // INCOME or EXPENSE
+    private TransactionType type;
 
     @Column(nullable = false)
     private String category;

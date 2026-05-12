@@ -43,8 +43,11 @@ src/main/java/com/finance/app/
 └── dto/
     └── FinanceDTOs.java
 ```
-
+## 🔗 Related
+- 🖥️ Frontend: [Finance Dashboard UI](https://github.com/Wajid148/my-project/blob/main/finance-dashboard-v4.html)
 ---
+## 👨‍💻 Author
+- GitHub: [@Wajid148](https://github.com/Wajid148)
 
 ## ⚙️ Setup
 
